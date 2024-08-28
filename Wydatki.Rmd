@@ -1,0 +1,915 @@
+---
+title: "Wydatki"
+output:
+  html_document:
+    fig_width: 12
+    fig_height: 7
+date: "2024-05-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ładowanie bibliotek
+
+```{r}
+library(dplyr)
+library(geojsonio)
+library(maps)
+library(sf)
+library(ggrepel)
+library(readxl)
+library(ggplot2)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+library(ggthemes)
+options(scipen = 999)
+
+```
+
+## Ładowanie danych
+
+```{r}
+excel_file <- "WydatkiDane.xlsx"
+
+sheet_name1 <- "WydatkiAll"
+sheet_name2 <- "WydatkiDziały"
+sheet_name3 <- "Części1"
+sheet_name4 <- "Części2"
+sheet_name5 <- "Fundusze"
+sheet_name6 <- "BudżetyDziały"
+sheet_name7 <- "BudżetyTop"
+sheet_name8 <- "ZusDziały"
+sheet_name9 <- "ZusTop"
+sheet_name10 <- "ZabezpieczeniaTop"
+sheet_name11 <- "KrusTop"
+sheet_name12 <- "InneTop"
+sheet_name13 <- "PracaTop"
+sheet_name14 <- "FUSfundusze"
+sheet_name15 <- "RentTop"
+sheet_name16 <- "ChorobTop"
+sheet_name17 <- "WypadTop"
+sheet_name18 <- "EmeRenTop"
+sheet_name19 <- "FundPracTop"
+sheet_name20 <- "FS"
+
+WydatkiAll <- read_excel(excel_file, sheet = sheet_name1, col_names = TRUE)
+WydatkiDziały <- read_excel(excel_file, sheet = sheet_name2, col_names = TRUE)
+Części1 <- read_excel(excel_file, sheet = sheet_name3, col_names = TRUE)
+Części2 <- read_excel(excel_file, sheet = sheet_name4, col_names = TRUE)
+Fundusze <- read_excel(excel_file, sheet = sheet_name5, col_names = TRUE)
+BudżetyDziały <- read_excel(excel_file, sheet = sheet_name6, col_names = TRUE)
+BudżetyTop <- read_excel(excel_file, sheet = sheet_name7, col_names = TRUE)
+ZusDziały <- read_excel(excel_file, sheet = sheet_name8, col_names = TRUE)
+ZusTop <- read_excel(excel_file, sheet = sheet_name9, col_names = TRUE)
+ZabezpieczeniaTop <- read_excel(excel_file, sheet = sheet_name10, col_names = TRUE)
+KrusTop <- read_excel(excel_file, sheet = sheet_name11, col_names = TRUE)
+InneTop <- read_excel(excel_file, sheet = sheet_name12, col_names = TRUE)
+PracaTop <- read_excel(excel_file, sheet = sheet_name13, col_names = TRUE)
+FUSfundusze <- read_excel(excel_file, sheet = sheet_name14, col_names = TRUE)
+RentTop <- read_excel(excel_file, sheet = sheet_name15, col_names = TRUE)
+ChorobTop <- read_excel(excel_file, sheet = sheet_name16, col_names = TRUE)
+WypadTop <- read_excel(excel_file, sheet = sheet_name17, col_names = TRUE)
+EmeRenTop <- read_excel(excel_file, sheet = sheet_name18, col_names = TRUE)
+FundPracTop <- read_excel(excel_file, sheet = sheet_name19, col_names = TRUE)
+FS <- read_excel(excel_file, sheet = sheet_name20, col_names = TRUE)
+```
+
+## WydatkiAllWykres
+
+```{r}
+WydatkiAllWykres <- ggplot(WydatkiAll, aes(x = Rok)) +
+  geom_col(aes(y = `Wydatki budżetowe ogólnie`, fill = "Wydatki budżetowe ogólnie"), show.legend = TRUE) +
+  geom_col(aes(y = `Wydatki na politykę społeczną`, fill = "Wydatki na politykę społeczną"), show.legend = TRUE) +
+  scale_y_continuous(
+   breaks = seq(0, 550, by = 50),
+    limits = c(0, 550),
+    expand = c(0, 100)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  
+  geom_text(aes(y = `Wydatki budżetowe ogólnie` + (0.035 * max(`Wydatki budżetowe ogólnie`)), label = round(`Wydatki budżetowe ogólnie`, 1)), size = 3, color = "black") +
+  geom_text(aes(y = `Wydatki na politykę społeczną` - (0.1 * max(`Wydatki na politykę społeczną`)), label = round(`Wydatki na politykę społeczną`, 1)), size = 3, color = "black") +
+   theme(legend.position = "bottom") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    fill = "Rodzaj wydatków"
+  )
+
+WydatkiAllWykres 
+```
+
+## WydatkiDziałyWykres
+
+```{r}
+WydatkiDziałyWykres <- ggplot(WydatkiDziały, aes(x = Rok)) +
+  geom_line(aes(y = `Pomoc społeczna`, group = 1, color = "Pomoc społeczna"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Pomoc społeczna`, color = "Pomoc społeczna", shape = "Pomoc społeczna"), size = 3) +
+  
+  geom_line(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, group = 1, color = "Pozostałe zadania w zakresie polityki społecznej"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, color = "Pozostałe zadania w zakresie polityki społecznej", shape = "Pozostałe zadania w zakresie polityki społecznej"), size = 3) +
+  
+  geom_line(aes(y = `Obowiązkowe ubezpieczenia społeczne`, group = 1, color = "Obowiązkowe ubezpieczenia społeczne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Obowiązkowe ubezpieczenia społeczne`, color = "Obowiązkowe ubezpieczenia społeczne", shape = "Obowiązkowe ubezpieczenia społeczne"), size = 3) +
+  
+  geom_line(aes(y = `Rodzina`, group = 1, color = "Rodzina"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Rodzina`, color = "Rodzina", shape = "Rodzina"), size = 3) +
+  
+geom_text_repel(aes(y = `Pomoc społeczna`, label = round(`Pomoc społeczna`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, label = round(`Pozostałe zadania w zakresie polityki społecznej`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Obowiązkowe ubezpieczenia społeczne`, label = round(`Obowiązkowe ubezpieczenia społeczne`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Rodzina`, label = round(`Rodzina`, 2)), size = 3, color = "black") +
+  
+  scale_y_continuous(
+   breaks = seq(0, 100, by = 10),
+    limits = c(0, 100),
+    expand = c(0, 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Pomoc społeczna" = 15, "Pozostałe zadania w zakresie polityki społecznej" = 16, "Obowiązkowe ubezpieczenia społeczne" = 17, "Rodzina" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Dział budżetowy",
+    shape = "Dział budżetowy"
+  )
+
+WydatkiDziałyWykres
+```
+
+## Części1Wykres
+
+```{r}
+Części1Wykres <- ggplot(Części1, aes(x = Rok)) +
+  geom_line(aes(y = `Budżety wojewodów`, group = 1, color = "Budżety wojewodów"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Budżety wojewodów`, color = "Budżety wojewodów", shape = "Budżety wojewodów"), size = 3) +
+  
+  geom_line(aes(y = `Zabezpieczenie społeczne`, group = 1, color = "Zabezpieczenie społeczne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zabezpieczenie społeczne`, color = "Zabezpieczenie społeczne", shape = "Zabezpieczenie społeczne"), size = 3) +
+  
+  geom_line(aes(y = `ZUS`, group = 1, color = "ZUS"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `ZUS`, color = "ZUS", shape = "ZUS"), size = 3) +
+  
+  geom_line(aes(y = `Praca`, group = 1, color = "Praca"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Praca`, color = "Praca", shape = "Praca"), size = 3) +
+  
+geom_text_repel(aes(y = `Budżety wojewodów`, label = round(`Budżety wojewodów`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Zabezpieczenie społeczne`, label = round(`Zabezpieczenie społeczne`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `ZUS`, label = round(`ZUS`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Praca`, label = round(`Praca`, 2)), size = 3, color = "black") +
+  
+  scale_y_continuous(
+   breaks = seq(0, 80, by = 10),
+    limits = c(0, 80
+               ),
+    expand = c(0, 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Budżety wojewodów" = 15, "Zabezpieczenie społeczne" = 16, "ZUS" = 17, "Praca" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Część budżetowa",
+    shape = "Część budżetowa"
+  )
+
+Części1Wykres
+```
+
+## Części2Wykres
+
+```{r}
+Części2Wykres <- ggplot(Części2, aes(x = Rok)) +
+  geom_line(aes(y = `Sprawy wewnętrzne`, group = 1, color = "Sprawy wewnętrzne"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Sprawy wewnętrzne`, color = "Sprawy wewnętrzne", shape = "Sprawy wewnętrzne"), size = 3) +
+  
+  geom_line(aes(y = `Obrona Narodowa`, group = 1, color = "Obrona Narodowa"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Obrona Narodowa`, color = "Obrona Narodowa", shape = "Obrona Narodowa"), size = 3) +
+  
+  geom_line(aes(y = `Sprawiedliwość`, group = 1, color = "Sprawiedliwość"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Sprawiedliwość`, color = "Sprawiedliwość", shape = "Sprawiedliwość"), size = 3) +
+  
+  geom_line(aes(y = `KRUS`, group = 1, color = "KRUS"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `KRUS`, color = "KRUS", shape = "KRUS"), size = 3) +
+  
+geom_text_repel(aes(y = `Sprawy wewnętrzne`, label = round(`Sprawy wewnętrzne`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Obrona Narodowa`, label = round(`Obrona Narodowa`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Sprawiedliwość`, label = round(`Sprawiedliwość`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `KRUS`, label = round(`KRUS`, 2)), size = 3, color = "black") +
+  
+  scale_y_continuous(
+   breaks = seq(0, 20, by = 2),
+    limits = c(0, 20),
+    expand = c(0, 2)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Sprawy wewnętrzne" = 15, "Obrona Narodowa" = 16, "Sprawiedliwość" = 17, "KRUS" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Część budżetowa",
+    shape = "Część budżetowa"
+  )
+
+Części2Wykres
+```
+
+## FunduszeWykres
+
+```{r}
+FunduszeWykres <- ggplot(Fundusze, aes(x = Rok)) +
+  geom_line(aes(y = `FUS`, group = 1, color = "FUS"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `FUS`, color = "FUS", shape = "FUS"), size = 3) +
+  
+  geom_line(aes(y = `FER`, group = 1, color = "FER"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `FER`, color = "FER", shape = "FER"), size = 3) +
+  
+  geom_line(aes(y = `FP`, group = 1, color = "FP"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `FP`, color = "FP", shape = "FP"), size = 3) +
+  
+  geom_line(aes(y = `FS`, group = 1, color = "FS"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `FS`, color = "FS", shape = "FS"), size = 3) +
+  
+geom_text_repel(aes(y = `FUS`, label = round(`FUS`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `FER`, label = round(`FER`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `FP`, label = round(`FP`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `FS`, label = round(`FS`, 2)), size = 3, color = "black") +  
+  scale_y_continuous(
+   breaks = seq(0, 310, by = 30),
+    limits = c(0, 310),
+    expand = c(0, 30)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("FUS" = 15, "FER" = 16, "FP" = 17, "KRUS" = 18, "FS" = 19)) +
+  theme(legend.position = "bottom") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Fundusz",
+    shape = "Fundusz"
+  )
+
+FunduszeWykres
+```
+
+## BudżetyDziałyWykres
+
+```{r}
+BudżetyDziałyWykres <- ggplot(BudżetyDziały, aes(x = Rok)) +
+  geom_line(aes(y = `Pomoc społeczna`, group = 1, color = "Pomoc społeczna"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Pomoc społeczna`, color = "Pomoc społeczna", shape = "Pomoc społeczna"), size = 3) +
+  
+  geom_line(aes(y = `Rodzina`, group = 1, color = "Rodzina"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Rodzina`, color = "Rodzina", shape = "Rodzina"), size = 3) +
+  
+  geom_line(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, group = 1, color = "Pozostałe zadania w zakresie polityki społecznej"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, color = "Pozostałe zadania w zakresie polityki społecznej", shape = "Pozostałe zadania w zakresie polityki społecznej"), size = 3) +
+  
+geom_text_repel(aes(y = `Pomoc społeczna`, label = round(`Pomoc społeczna`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Rodzina`, label = round(`Rodzina`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, label = round(`Pozostałe zadania w zakresie polityki społecznej`, 2)), size = 3, color = "black") +
+  
+  scale_y_continuous(
+   breaks = seq(0, 60, by = 10),
+    limits = c(0, 60),
+    expand = c(0, 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Pomoc społeczna" = 15, "Rodzina" = 16, "Pozostałe zadania w zakresie polityki społecznej" = 17, "KRUS" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Dział budżetowy",
+    shape = "Dział budżetowy"
+  )
+
+BudżetyDziałyWykres
+```
+
+## BudżetyTopWykres
+
+```{r}
+BudżetyTopWykres <- ggplot(BudżetyTop, aes(x = Rok)) +
+  geom_line(aes(y = `Świadczenie wychowawcze`, group = 1, color = "Świadczenie wychowawcze"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Świadczenie wychowawcze`, color = "Świadczenie wychowawcze", shape = "Świadczenie wychowawcze"), size = 3) +
+  
+  geom_line(aes(y = `Świadczenia rodzinne, alimenty, składki na ubezpieczenia`, group = 1, color = "Świadczenia rodzinne, alimenty, składki na ubezpieczenia"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Świadczenia rodzinne, alimenty, składki na ubezpieczenia`, color = "Świadczenia rodzinne, alimenty, składki na ubezpieczenia", shape = "Świadczenia rodzinne, alimenty, składki na ubezpieczenia"), size = 3) +
+  
+geom_text_repel(aes(y = `Świadczenie wychowawcze`, label = round(`Świadczenie wychowawcze`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Świadczenia rodzinne, alimenty, składki na ubezpieczenia`, label = round(`Świadczenia rodzinne, alimenty, składki na ubezpieczenia`, 2)), size = 3, color = "black") +
+  
+  scale_y_continuous(
+   breaks = seq(0, 42, by = 10),
+    limits = c(0, 42),
+    expand = c(0, 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Świadczenie wychowawcze" = 15, "Świadczenia rodzinne, alimenty, składki na ubezpieczenia" = 16)) +
+  theme(legend.position = "bottom") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+BudżetyTopWykres
+```
+
+## BudżetyTop2Wykres
+
+```{r}
+BudżetyTop2Wykres <- ggplot(BudżetyTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Domy pomocy społecznej`, group = 1, color = "Domy pomocy społecznej"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Domy pomocy społecznej`, color = "Domy pomocy społecznej", shape = "Domy pomocy społecznej"), size = 3) +
+  
+  geom_line(aes(y = `Zasiłki stałe`, group = 1, color = "Zasiłki stałe"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zasiłki stałe`, color = "Zasiłki stałe", shape = "Zasiłki stałe"), size = 3) +
+  
+  geom_line(aes(y = `Zasiłki okresowe, celowe, pomoc w naturze`, group = 1, color = "Zasiłki okresowe, celowe, pomoc w naturze"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zasiłki okresowe, celowe, pomoc w naturze`, color = "Zasiłki okresowe, celowe, pomoc w naturze", shape = "Zasiłki okresowe, celowe, pomoc w naturze"), size = 3) +
+  
+  
+   geom_line(aes(y = `Usługi opiekuńcze`, group = 1, color = "Usługi opiekuńcze"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Usługi opiekuńcze`, color = "Usługi opiekuńcze", shape = "Usługi opiekuńcze"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Domy pomocy społecznej`, label = round(`Domy pomocy społecznej`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Zasiłki stałe`, label = round(`Zasiłki stałe`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Zasiłki okresowe, celowe, pomoc w naturze`, label = round(`Zasiłki okresowe, celowe, pomoc w naturze`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Usługi opiekuńcze`, label = round(`Usługi opiekuńcze`, 2)), size = 3, color = "black") +  
+
+   scale_y_continuous(
+   breaks = seq(0, 1.5, by = 0.1),
+    limits = c(0, 1.5),
+    expand = c(0, 0.1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Domy pomocy społecznej" = 15, "Zasiłki stałe" = 16, "Zasiłki okresowe, celowe, pomoc w naturze" = 17, "Usługi opiekuńcze" = 19)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+BudżetyTop2Wykres 
+```
+
+## ZusDziałyWykres
+
+```{r}
+ZusDziałyWykres <- ggplot(ZusDziały, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Obowiązkowe ubezpieczenia społeczne`, group = 1, color = "Obowiązkowe ubezpieczenia społeczne"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Obowiązkowe ubezpieczenia społeczne`, color = "Obowiązkowe ubezpieczenia społeczne", shape = "Obowiązkowe ubezpieczenia społeczne"), size = 3) +
+  
+  geom_line(aes(y = `Rodzina`, group = 1, color = "Rodzina"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Rodzina`, color = "Rodzina", shape = "Rodzina"), size = 3) +
+  
+  geom_line(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, group = 1, color = "Pozostałe zadania w zakresie polityki społecznej"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, color = "Pozostałe zadania w zakresie polityki społecznej", shape = "Pozostałe zadania w zakresie polityki społecznej"), size = 3) +
+  
+geom_text_repel(aes(y = `Obowiązkowe ubezpieczenia społeczne`, label = round(`Obowiązkowe ubezpieczenia społeczne`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Rodzina`, label = round(`Rodzina`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Pozostałe zadania w zakresie polityki społecznej`, label = round(`Pozostałe zadania w zakresie polityki społecznej`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 52, by = 10),
+    limits = c(0, 52),
+    expand = c(0, 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Obowiązkowe ubezpieczenia społeczne" = 15, "Rodzina" = 16, "Pozostałe zadania w zakresie polityki społecznej" = 17)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Dział budżetowy",
+    shape = "Dział budżetowy"
+  )
+
+ZusDziałyWykres 
+```
+
+## ZusTopWykres
+
+```{r}
+ZusTopWykres <- ggplot(ZusTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `FUS`, group = 1, color = "FUS"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `FUS`, color = "FUS", shape = "FUS"), size = 3) +
+  
+  geom_line(aes(y = `Fundusz Rezerwy Demograficznej`, group = 1, color = "Fundusz Rezerwy Demograficznej"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Fundusz Rezerwy Demograficznej`, color = "Fundusz Rezerwy Demograficznej", shape = "Fundusz Rezerwy Demograficznej"), size = 3) +
+  
+  geom_line(aes(y = `Świadczenia zlecone do wypłaty ZUS`, group = 1, color = "Świadczenia zlecone do wypłaty ZUS"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Świadczenia zlecone do wypłaty ZUS`, color = "Świadczenia zlecone do wypłaty ZUS", shape = "Świadczenia zlecone do wypłaty ZUS"), size = 3) +
+  
+
+  geom_line(aes(y = `Renta socjalna oraz zasiłki i świadczenia przedemerytalne`, group = 1, color = "Renta socjalna oraz zasiłki i świadczenia przedemerytalne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Renta socjalna oraz zasiłki i świadczenia przedemerytalne`, color = "Renta socjalna oraz zasiłki i świadczenia przedemerytalne", shape = "Renta socjalna oraz zasiłki i świadczenia przedemerytalne"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `FUS`, label = round(`FUS`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Fundusz Rezerwy Demograficznej`, label = round(`Fundusz Rezerwy Demograficznej`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Świadczenia zlecone do wypłaty ZUS`, label = round(`Świadczenia zlecone do wypłaty ZUS`, 2)), size = 3, color = "black") +
+  geom_text_repel(aes(y = `Renta socjalna oraz zasiłki i świadczenia przedemerytalne`, label = round(`Renta socjalna oraz zasiłki i świadczenia przedemerytalne`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 52, by = 10),
+    limits = c(0, 52),
+    expand = c(0, 10)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("FUS" = 15, "Fundusz Rezerwy Demograficznej" = 16, "Świadczenia zlecone do wypłaty ZUS" = 17, "Renta socjalna oraz zasiłki i świadczenia przedemerytalne" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+ZusTopWykres 
+```
+
+## ZabezpieczeniaTopWykres
+
+```{r}
+ZabezpieczeniaTopWykres <- ggplot(ZabezpieczeniaTop, aes(x = Rok)) +
+  
+  geom_line(aes(y =`Państwowy Fundusz Rehabilitacji Osób Niepełnosprawnych`, group = 1, color = "Państwowy Fundusz Rehabilitacji Osób Niepełnosprawnych"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Państwowy Fundusz Rehabilitacji Osób Niepełnosprawnych`, color = "Państwowy Fundusz Rehabilitacji Osób Niepełnosprawnych", shape = "Państwowy Fundusz Rehabilitacji Osób Niepełnosprawnych"), size = 3) +
+  
+  geom_line(aes(y = `Fundusz Solidarnościowy`, group = 1, color = "Fundusz Solidarnościowy"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Fundusz Solidarnościowy`, color = "Fundusz Solidarnościowy", shape = "Fundusz Solidarnościowy"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Państwowy Fundusz Rehabilitacji Osób Niepełnosprawnych`, label = round(`Państwowy Fundusz Rehabilitacji Osób Niepełnosprawnych`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Fundusz Solidarnościowy`, label = round(`Fundusz Solidarnościowy`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 28, by = 2),
+    limits = c(0, 28),
+    expand = c(0, 2)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Państwowy Fundusz Rehabilitacji Osób Niepełnosprawnych" = 15, "Fundusz Solidarnościowy" = 16)) +
+  theme(legend.position = "bottom") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+ZabezpieczeniaTopWykres 
+```
+
+## KrusTopWykres
+
+```{r}
+KrusTopWykres <- ggplot(KrusTop, aes(x = Rok)) +
+  
+  geom_line(aes(y =`FER`, group = 1, color = "FER"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `FER`, color = "FER", shape = "FER"), size = 3) +
+  
+  geom_line(aes(y = `Świadczenia zlecone do wypłaty KRUS`, group = 1, color = "Świadczenia zlecone do wypłaty KRUS"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Świadczenia zlecone do wypłaty KRUS`, color = "Świadczenia zlecone do wypłaty KRUS", shape = "Świadczenia zlecone do wypłaty KRUS"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `FER`, label = round(`FER`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Świadczenia zlecone do wypłaty KRUS`, label = round(`Świadczenia zlecone do wypłaty KRUS`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 20, by = 2),
+    limits = c(0, 20),
+    expand = c(0, 2)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("FER" = 15, "Świadczenia zlecone do wypłaty KRUS" = 16)) +
+  theme(legend.position = "bottom") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+KrusTopWykres 
+```
+
+## InneTopWykres
+
+```{r}
+InneTopWykres <- ggplot(InneTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Sprawy Wewnętrzne`, group = 1, color = "Sprawy Wewnętrzne"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Sprawy Wewnętrzne`, color = "Sprawy Wewnętrzne", shape = "Sprawy Wewnętrzne"), size = 3) +
+  
+  geom_line(aes(y = `Obrona Narodowa`, group = 1, color = "Obrona Narodowa"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Obrona Narodowa`, color = "Obrona Narodowa", shape = "Obrona Narodowa"), size = 3) +
+  
+  geom_line(aes(y = `Sprawiedliwość`, group = 1, color = "Sprawiedliwość"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Sprawiedliwość`, color = "Sprawiedliwość", shape = "Sprawiedliwość"), size = 3) +
+  
+geom_text_repel(aes(y = `Sprawy Wewnętrzne`, label = round(`Sprawy Wewnętrzne`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Obrona Narodowa`, label = round(`Obrona Narodowa`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Sprawiedliwość`, label = round(`Sprawiedliwość`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 14, by = 2),
+    limits = c(0, 14),
+    expand = c(0, 2)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Sprawy Wewnętrzne" = 15, "Obrona Narodowa" = 16, "Sprawiedliwość" = 17)) +
+  theme(legend.position = "bottom") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Część budżetowa",
+    shape = "Część budżetowa"
+  )
+
+InneTopWykres 
+```
+
+## PracaTopWykres
+
+```{r}
+PracaTopWykres <- ggplot(PracaTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `FP`, group = 1, color = "FP"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `FP`, color = "FP", shape = "FP"), size = 3) +
+  
+  geom_line(aes(y = `Ochotnicze Hufce Pracy`, group = 1, color = "Ochotnicze Hufce Pracy"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Ochotnicze Hufce Pracy`, color = "Ochotnicze Hufce Pracy", shape = "Ochotnicze Hufce Pracy"), size = 3) +
+  
+geom_text_repel(aes(y = `FP`, label = round(`FP`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Ochotnicze Hufce Pracy`, label = round(`Ochotnicze Hufce Pracy`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 1, by = 0.1),
+    limits = c(0, 1),
+    expand = c(0, 0.1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("FP" = 15, "Ochotnicze Hufce Pracy" = 16)) +
+  theme(legend.position = "bottom") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+PracaTopWykres 
+```
+
+## FUSfunduszeWykres
+
+```{r}
+FUSfunduszeWykres <- ggplot(FUSfundusze, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Fundusz emerytalny`, group = 1, color = "Fundusz emerytalny"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Fundusz emerytalny`, color = "Fundusz emerytalny", shape = "Fundusz emerytalny"), size = 3) +
+  
+   geom_line(aes(y = `Fundusz rentowy`, group = 1, color = "Fundusz rentowy"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Fundusz rentowy`, color = "Fundusz rentowy", shape = "Fundusz rentowy"), size = 3) +
+  
+  geom_line(aes(y = `Fundusz chorobowy`, group = 1, color = "Fundusz chorobowy"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Fundusz chorobowy`, color = "Fundusz chorobowy", shape = "Fundusz chorobowy"), size = 3) +
+  
+
+  geom_line(aes(y = `Fundusz wypadkowy`, group = 1, color = "Fundusz wypadkowy"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Fundusz wypadkowy`, color = "Fundusz wypadkowy", shape = "Fundusz wypadkowy"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Fundusz rentowy`, label = round(`Fundusz rentowy`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Fundusz emerytalny`, label = round(`Fundusz emerytalny`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Fundusz chorobowy`, label = round(`Fundusz chorobowy`, 2)), size = 3, color = "black") +
+  geom_text_repel(aes(y = `Fundusz wypadkowy`, label = round(`Fundusz wypadkowy`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 220, by = 20),
+    limits = c(0, 220),
+    expand = c(0, 20)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Fundusz rentowy" = 15, "Fundusz emerytalny" = 16, "Fundusz chorobowy" = 17, "Fundusz wypadkowy" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+FUSfunduszeWykres
+```
+
+## RentTopWykres
+
+```{r}
+RentTopWykres <- ggplot(RentTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Renty`, group = 1, color = "Renty"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Renty`, color = "Renty", shape = "Renty"), size = 3) +
+  
+   geom_line(aes(y = `Emerytury przyznane z urzędu zamiast renty`, group = 1, color = "Emerytury przyznane z urzędu zamiast renty"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Emerytury przyznane z urzędu zamiast renty`, color = "Emerytury przyznane z urzędu zamiast renty", shape = "Emerytury przyznane z urzędu zamiast renty"), size = 3) +
+  
+  geom_line(aes(y = `Dodatki pielęgnacyjne, dla sierot zupełnych i za tajne nauczanie`, group = 1, color = "Dodatki pielęgnacyjne, dla sierot zupełnych i za tajne nauczanie"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Dodatki pielęgnacyjne, dla sierot zupełnych i za tajne nauczanie`, color = "Dodatki pielęgnacyjne, dla sierot zupełnych i za tajne nauczanie", shape = "Dodatki pielęgnacyjne, dla sierot zupełnych i za tajne nauczanie"), size = 3) +
+  
+
+  geom_line(aes(y = `Zasiłki pogrzebowe`, group = 1, color = "Zasiłki pogrzebowe"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zasiłki pogrzebowe`, color = "Zasiłki pogrzebowe", shape = "Zasiłki pogrzebowe"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Emerytury przyznane z urzędu zamiast renty`, label = round(`Emerytury przyznane z urzędu zamiast renty`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Renty`, label = round(`Renty`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Dodatki pielęgnacyjne, dla sierot zupełnych i za tajne nauczanie`, label = round(`Dodatki pielęgnacyjne, dla sierot zupełnych i za tajne nauczanie`, 2)), size = 3, color = "black") +
+  geom_text_repel(aes(y = `Zasiłki pogrzebowe`, label = round(`Zasiłki pogrzebowe`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 45, by = 5),
+    limits = c(0, 45),
+    expand = c(0, 5)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Emerytury przyznane z urzędu zamiast renty" = 15, "Renty" = 16, "Dodatki pielęgnacyjne, dla sierot zupełnych i za tajne nauczanie" = 17, "Zasiłki pogrzebowe" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+RentTopWykres
+```
+
+## ChorobTopWykres
+
+```{r}
+ChorobTopWykres <- ggplot(ChorobTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Zasiłki chorobowe`, group = 1, color = "Zasiłki chorobowe"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zasiłki chorobowe`, color = "Zasiłki chorobowe", shape = "Zasiłki chorobowe"), size = 3) +
+  
+   geom_line(aes(y = `Zasiłki macierzyńskie`, group = 1, color = "Zasiłki macierzyńskie"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Zasiłki macierzyńskie`, color = "Zasiłki macierzyńskie", shape = "Zasiłki macierzyńskie"), size = 3) +
+  
+  geom_line(aes(y = `Zasiłki opiekuńcze`, group = 1, color = "Zasiłki opiekuńcze"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zasiłki opiekuńcze`, color = "Zasiłki opiekuńcze", shape = "Zasiłki opiekuńcze"), size = 3) +
+  
+
+  geom_line(aes(y = `Świadczenia rehabilitacyjne`, group = 1, color = "Świadczenia rehabilitacyjne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Świadczenia rehabilitacyjne`, color = "Świadczenia rehabilitacyjne", shape = "Świadczenia rehabilitacyjne"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Zasiłki macierzyńskie`, label = round(`Zasiłki macierzyńskie`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Zasiłki chorobowe`, label = round(`Zasiłki chorobowe`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Zasiłki opiekuńcze`, label = round(`Zasiłki opiekuńcze`, 2)), size = 3, color = "black") +
+  geom_text_repel(aes(y = `Świadczenia rehabilitacyjne`, label = round(`Świadczenia rehabilitacyjne`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 15, by = 1),
+    limits = c(0, 15),
+    expand = c(0, 1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Zasiłki macierzyńskie" = 15, "Zasiłki chorobowe" = 16, "Zasiłki opiekuńcze" = 17, "Świadczenia rehabilitacyjne" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+ChorobTopWykres
+```
+
+## WypadTopWykres
+
+```{r}
+WypadTopWykres <- ggplot(WypadTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Renty`, group = 1, color = "Renty"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Renty`, color = "Renty", shape = "Renty"), size = 3) +
+  
+   geom_line(aes(y = `Dodatki pielęgnacyjne i dla sierot zupełnych`, group = 1, color = "Dodatki pielęgnacyjne i dla sierot zupełnych"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Dodatki pielęgnacyjne i dla sierot zupełnych`, color = "Dodatki pielęgnacyjne i dla sierot zupełnych", shape = "Dodatki pielęgnacyjne i dla sierot zupełnych"), size = 3) +
+  
+  geom_line(aes(y = `Zasiłki chorobowe`, group = 1, color = "Zasiłki chorobowe"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zasiłki chorobowe`, color = "Zasiłki chorobowe", shape = "Zasiłki chorobowe"), size = 3) +
+  
+
+  geom_line(aes(y = `Świadczenia rehabilitacyjne`, group = 1, color = "Świadczenia rehabilitacyjne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Świadczenia rehabilitacyjne`, color = "Świadczenia rehabilitacyjne", shape = "Świadczenia rehabilitacyjne"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Dodatki pielęgnacyjne i dla sierot zupełnych`, label = round(`Dodatki pielęgnacyjne i dla sierot zupełnych`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Renty`, label = round(`Renty`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Zasiłki chorobowe`, label = round(`Zasiłki chorobowe`, 2)), size = 3, color = "black") +
+  geom_text_repel(aes(y = `Świadczenia rehabilitacyjne`, label = round(`Świadczenia rehabilitacyjne`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 5, by = 0.5),
+    limits = c(0, 5),
+    expand = c(0, 0.5)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Dodatki pielęgnacyjne i dla sierot zupełnych" = 15, "Renty" = 16, "Zasiłki chorobowe" = 17, "Świadczenia rehabilitacyjne" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+WypadTopWykres
+```
+
+## EmeRenTopWykres
+
+```{r}
+EmeRenTopWykres <- ggplot(EmeRenTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Emerytury i renty rolnicze`, group = 1, color = "Emerytury i renty rolnicze"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Emerytury i renty rolnicze`, color = "Emerytury i renty rolnicze", shape = "Emerytury i renty rolnicze"), size = 3) +
+  
+   geom_line(aes(y = `Zasiłki pogrzebowe rolne`, group = 1, color = "Zasiłki pogrzebowe rolne"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Zasiłki pogrzebowe rolne`, color = "Zasiłki pogrzebowe rolne", shape = "Zasiłki pogrzebowe rolne"), size = 3) +
+  
+  geom_line(aes(y = `Zasiłki macierzyńskie`, group = 1, color = "Zasiłki macierzyńskie"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zasiłki macierzyńskie`, color = "Zasiłki macierzyńskie", shape = "Zasiłki macierzyńskie"), size = 3) +
+  
+
+  geom_line(aes(y = `Świadczenia zbiegowe i inne transfery`, group = 1, color = "Świadczenia zbiegowe i inne transfery"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Świadczenia zbiegowe i inne transfery`, color = "Świadczenia zbiegowe i inne transfery", shape = "Świadczenia zbiegowe i inne transfery"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Zasiłki pogrzebowe rolne`, label = round(`Zasiłki pogrzebowe rolne`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Emerytury i renty rolnicze`, label = round(`Emerytury i renty rolnicze`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Zasiłki macierzyńskie`, label = round(`Zasiłki macierzyńskie`, 2)), size = 3, color = "black") +
+  geom_text_repel(aes(y = `Świadczenia zbiegowe i inne transfery`, label = round(`Świadczenia zbiegowe i inne transfery`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 18, by = 1),
+    limits = c(0, 18),
+    expand = c(0, 1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Zasiłki pogrzebowe rolne" = 15, "Emerytury i renty rolnicze" = 16, "Zasiłki macierzyńskie" = 17, "Świadczenia zbiegowe i inne transfery" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+EmeRenTopWykres
+```
+
+## FundPracTopWykres
+
+```{r}
+FundPracTopWykres <- ggplot(FundPracTop, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Zasiłki dla bezrobotnych`, group = 1, color = "Zasiłki dla bezrobotnych"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Zasiłki dla bezrobotnych`, color = "Zasiłki dla bezrobotnych", shape = "Zasiłki dla bezrobotnych"), size = 3) +
+  
+   geom_line(aes(y = `Zasiłki przedemerytalne i świadczenia przedemerytalne`, group = 1, color = "Zasiłki przedemerytalne i świadczenia przedemerytalne"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Zasiłki przedemerytalne i świadczenia przedemerytalne`, color = "Zasiłki przedemerytalne i świadczenia przedemerytalne", shape = "Zasiłki przedemerytalne i świadczenia przedemerytalne"), size = 3) +
+  
+  geom_line(aes(y = `Aktywne formy przeciwdziałania bezrobociu`, group = 1, color = "Aktywne formy przeciwdziałania bezrobociu"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Aktywne formy przeciwdziałania bezrobociu`, color = "Aktywne formy przeciwdziałania bezrobociu", shape = "Aktywne formy przeciwdziałania bezrobociu"), size = 3) +
+  
+
+  geom_line(aes(y = `Dodatki aktywizacyjne`, group = 1, color = "Dodatki aktywizacyjne"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Dodatki aktywizacyjne`, color = "Dodatki aktywizacyjne", shape = "Dodatki aktywizacyjne"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Zasiłki przedemerytalne i świadczenia przedemerytalne`, label = round(`Zasiłki przedemerytalne i świadczenia przedemerytalne`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Zasiłki dla bezrobotnych`, label = round(`Zasiłki dla bezrobotnych`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Aktywne formy przeciwdziałania bezrobociu`, label = round(`Aktywne formy przeciwdziałania bezrobociu`, 2)), size = 3, color = "black") +
+  geom_text_repel(aes(y = `Dodatki aktywizacyjne`, label = round(`Dodatki aktywizacyjne`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 20, by = 1),
+    limits = c(0, 20),
+    expand = c(0, 1)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Zasiłki przedemerytalne i świadczenia przedemerytalne" = 15, "Zasiłki dla bezrobotnych" = 16, "Aktywne formy przeciwdziałania bezrobociu" = 17, "Dodatki aktywizacyjne" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+FundPracTopWykres
+```
+
+## FSTopwykres
+
+```{r}
+FSWykres <- ggplot(FS, aes(x = Rok)) +
+  
+  geom_line(aes(y = `Wsparcie osób niepełnosprawnych`, group = 1, color = "Wsparcie osób niepełnosprawnych"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Wsparcie osób niepełnosprawnych`, color = "Wsparcie osób niepełnosprawnych", shape = "Wsparcie osób niepełnosprawnych"), size = 3) +
+  
+   geom_line(aes(y = `Świadczenie dla osób niezdolnych do samodzielnej egzystencji`, group = 1, color = "Świadczenie dla osób niezdolnych do samodzielnej egzystencji"), show.legend = TRUE, size = 1.5, linetype = "solid", ) +
+  geom_point(aes(y = `Świadczenie dla osób niezdolnych do samodzielnej egzystencji`, color = "Świadczenie dla osób niezdolnych do samodzielnej egzystencji", shape = "Świadczenie dla osób niezdolnych do samodzielnej egzystencji"), size = 3) +
+  
+  geom_line(aes(y = `Renta socjalna, zasiłek pogrzebowy`, group = 1, color = "Renta socjalna, zasiłek pogrzebowy"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Renta socjalna, zasiłek pogrzebowy`, color = "Renta socjalna, zasiłek pogrzebowy", shape = "Renta socjalna, zasiłek pogrzebowy"), size = 3) +
+  
+
+  geom_line(aes(y = `Dodatkowe roczne świadczenie dla emerytów i rencistów`, group = 1, color = "Dodatkowe roczne świadczenie dla emerytów i rencistów"), show.legend = TRUE, size = 1.5, linetype = "solid") +
+  geom_point(aes(y = `Dodatkowe roczne świadczenie dla emerytów i rencistów`, color = "Dodatkowe roczne świadczenie dla emerytów i rencistów", shape = "Dodatkowe roczne świadczenie dla emerytów i rencistów"), size = 3) +
+  
+  
+geom_text_repel(aes(y = `Świadczenie dla osób niezdolnych do samodzielnej egzystencji`, label = round(`Świadczenie dla osób niezdolnych do samodzielnej egzystencji`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Wsparcie osób niepełnosprawnych`, label = round(`Wsparcie osób niepełnosprawnych`, 2)), size = 3, color = "black") +
+geom_text_repel(aes(y = `Renta socjalna, zasiłek pogrzebowy`, label = round(`Renta socjalna, zasiłek pogrzebowy`, 2)), size = 3, color = "black") +
+  geom_text_repel(aes(y = `Dodatkowe roczne świadczenie dla emerytów i rencistów`, label = round(`Dodatkowe roczne świadczenie dla emerytów i rencistów`, 2)), size = 3, color = "black") +
+
+   scale_y_continuous(
+   breaks = seq(0, 24, by = 2),
+    limits = c(0, 24),
+    expand = c(0, 2)) +
+  theme_stata() +
+  scale_fill_stata() +
+  scale_color_stata() +
+  scale_shape_manual(values = c("Świadczenie dla osób niezdolnych do samodzielnej egzystencji" = 15, "Wsparcie osób niepełnosprawnych" = 16, "Renta socjalna, zasiłek pogrzebowy" = 17, "Dodatkowe roczne świadczenie dla emerytów i rencistów" = 18)) +
+  theme(legend.position = "left") +
+  
+  labs(
+    x = "Rok",
+    y = "Wydatki w mld zł",
+    color = "Wydatek",
+    shape = "Wydatek"
+  )
+
+FSWykres
+```
